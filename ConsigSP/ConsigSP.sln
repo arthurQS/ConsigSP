@@ -8,9 +8,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsigSP", "ConsigSP\Consig
 		{2A3A4DD2-6700-4319-85FE-7FDE7EACF925} = {2A3A4DD2-6700-4319-85FE-7FDE7EACF925}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrWo", "..\BrWo\BrWo\BrWo.csproj", "{813AABF4-4B4B-494C-BF2F-DB7C683D9D55}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrWo", "..\..\BrWo\BrWo\BrWo.csproj", "{813AABF4-4B4B-494C-BF2F-DB7C683D9D55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeathByCaptcha", "..\DeathByCaptcha\DeathByCaptcha\DeathByCaptcha.csproj", "{2A3A4DD2-6700-4319-85FE-7FDE7EACF925}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeathByCaptcha", "..\..\DeathByCaptcha\DeathByCaptcha\DeathByCaptcha.csproj", "{2A3A4DD2-6700-4319-85FE-7FDE7EACF925}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

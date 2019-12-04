@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <settings>
   <activeDb>ConnStrProd</activeDb>
-  <ConnStrDev>Data Source=Server=localhost\SQLEXPRESS;Database=ANALITICO;Trusted_Connection=True;</ConnStrDev>
-  <ConnStrProd>Server=localhost\SQLEXPRESS;Database=ANALITICO;Trusted_Connection=True;</ConnStrProd>
+  <ConnStrProd>Data Source=192.168.0.103\SQLEXPRESS; Initial Catalog=ANALITICO; User ID = roboanalitico; Password = inpk20qw;</ConnStrProd>
   <IdFilial>1</IdFilial>
   <Usuario>78882621634</Usuario>
   <Senha>Pvc@100**</Senha>
@@ -10,6 +9,6 @@
   <dbcPws>Inpk83qw</dbcPws>
   <Versao>1.0</Versao>
   <IpMask>192.168.0.</IpMask>
-  <Regra>136</Regra>
-  <MaxErrosEmSequencia>10</MaxErrosEmSequencia>
+  <Regra>137</Regra>
+  <MaxErrosEmSequencia>50</MaxErrosEmSequencia>
 </settings>

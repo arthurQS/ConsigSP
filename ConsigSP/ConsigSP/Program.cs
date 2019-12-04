@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using BrWo.Dominio;
 using BrWo.Tools;
 using DeathByCaptcha;
@@ -16,6 +17,7 @@ namespace ConsigSP
     {
         static public IWebDriver driver;
         static public int regraRobo;
+        static public int Opcao;
         static string CPF;
         static string imgFileName;
         static Captcha captcha;
@@ -39,7 +41,7 @@ namespace ConsigSP
                     captchaOk = false;
                     Daileon();
                 }
-                catch
+                catch (Exception ex)
                 {
                     try { driver.Quit(); } catch { }
                     if (finalizador == true)
@@ -50,13 +52,23 @@ namespace ConsigSP
 
             } while (true);
         }
+
+        static void LoadClient()
+        {
+            Settings settings = new Settings();
+
+            dbcUser = settings.Get("dbcUser");
+            dbcPws = settings.Get("dbcPws");
+            client = (Client)new SocketClient(dbcUser, dbcPws);
+        }
+
         static void Daileon()
         {
 
             Settings settings = new Settings();
             var tag = DateTime.Now.Ticks.ToString();
             var usuario = settings.Get("Usuario");
-            var regraRobo = int.Parse(settings.Get("Regra"));
+            regraRobo = int.Parse(settings.Get("Regra"));
             var senha = settings.Get("Senha");
             dbcUser = settings.Get("dbcUser");
             dbcPws = settings.Get("dbcPws");
@@ -74,8 +86,10 @@ namespace ConsigSP
             imgFileName = imgFilePath + tag + ".png";
 
             DAL dal = new DAL();
- 
+
             BancoDeCPFs bancoDeCPFs = new BancoDeCPFs(tag);
+            RegraRobo oRegra = new RegraRobo(regraRobo);
+            Opcao = oRegra.Opcao;
 
             AbrirPagina();
             try
@@ -103,7 +117,20 @@ namespace ConsigSP
                 Log.LogThis(ex.Message);
                 SairDoRobo();
             }
-            EscolhaMenu();
+
+            try
+            {
+                EscolhaMenu();
+                Thread.Sleep(3000);
+            }
+            catch (Exception ex)
+            {
+                OutLine(ex.Message);
+                Log.LogThis(ex.Message);
+                SairDoRobo();
+            }
+
+            NavegaMenu();
 
             //---------Pesquisa CPF---------//
             do
@@ -112,7 +139,6 @@ namespace ConsigSP
                 {
                     try
                     {
-                    Inicio:
                         ClienteRobo cliente = new ClienteRobo("ConsigSP");
 
                         CPF = bancoDeCPFs.FetchConsigSPCPF(regraRobo);
@@ -145,7 +171,7 @@ namespace ConsigSP
 
                         if (!(IsElementPresent(By.XPath("//*[@id='divContentResultado']/span/div/div/div[2]/div/div[2]/span"))))
                         {
-                            goto Inicio;
+                            continue;
                         }
                         cliente.Nome = driver.FindElement(By.XPath("//*[@id='divContentResultado']/span/div/div/div[2]/div/div[2]/span")).Text;
                         cliente.Orgao = driver.FindElement(By.XPath("//*[@id='divContentResultado']/span/div/div/div[2]/div/div[3]/div/span")).Text;
@@ -235,36 +261,40 @@ namespace ConsigSP
         }
         private static void EscolhaMenu()
         {
-            if (regraRobo == 1)
+            if (Opcao == 1)
             {
                 driver.FindElement(By.XPath("/html/body/div/div/form/div[2]/div/div[4]/div[2]/fieldset/span/label/input")).Click();
             }
-            if (regraRobo == 2)
+            else if (Opcao == 2)
             {
                 driver.FindElement(By.XPath("/html/body/div/div/form/div[2]/div/div[5]/div[2]/fieldset/span/label[1]/input")).Click();
             }
-            if (regraRobo == 3)
+            else if (Opcao == 3)
             {
                 driver.FindElement(By.XPath("/html/body/div/div/form/div[2]/div/div[5]/div[2]/fieldset/span/label[2]/input")).Click();
             }
-            if (regraRobo == 4)
+            else if (Opcao == 4)
             {
                 driver.FindElement(By.XPath("/html/body/div/div/form/div[2]/div/div[5]/div[2]/fieldset/span/label[3]/input")).Click();
             }
-            if (regraRobo == 5)
+            else if (Opcao == 5)
             {
                 driver.FindElement(By.XPath("/html/body/div/div/form/div[2]/div/div[6]/div[2]/fieldset/span/label/input")).Click();
             }
+            else
+            {
+                throw new Exception("Opção indisponível");
+            }
             Thread.Sleep(1000);
-            NavegaMenu();
+            driver.FindElement(By.XPath("//input[@value='Acessar']")).Click();
         }
         private static void NavegaMenu()
         {
-            driver.FindElement(By.XPath("//input[@value='Acessar']")).Click();
-            Thread.Sleep(3000);
-            driver.FindElement(By.XPath("//*[@id='menu']/div[2]/a/span")).Click();
+
+            driver.FindElement(By.XPath("//*[@id='menu']/div[3]/a/span")).Click();
             driver.FindElement(By.XPath("//*[@href='/consignatario/pesquisarMargem']")).Click();
         }
+
         private static bool DeCaptcha(IWebElement elementCaptcha, IWebElement elementTxt, IWebElement click)
         {
             try
@@ -283,9 +313,23 @@ namespace ConsigSP
                         imgCap.Save(imgFileName, ImageFormat.Png);
 
                         Out("Decoding CAPTCHA...");
-                        captcha = client.Decode(imgFileName, 30);
+                        //captcha = client.Decode(imgFileName, 30);
 
-                        if (captcha.Solved && captcha.Correct)
+                        var task = Task.Run(() => captcha = client.Decode(imgFileName, 20));
+                        if (!task.Wait(TimeSpan.FromSeconds(captchaTimout)))
+                        {
+                            captcha = null;
+                            LoadClient();
+                        }
+
+                        if (captcha == null)
+                        {
+                            Console.WriteLine("Captcha nulo - possível timout");
+                            //driver.FindElement(By.Id("c_caconsultamargem_captcha_ReloadLink")).Click();
+                            MudaCaptcha();
+                            return false;
+                        }
+                        else if (captcha.Solved && captcha.Correct)
                         {
                             Console.WriteLine("{0} - Saldo: {1}", captcha.Text, client.Balance / 100);
                         }
